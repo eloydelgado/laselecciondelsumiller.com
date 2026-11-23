@@ -384,6 +384,13 @@ def main():
     if r is not None and "text/html" in r.headers.get("Content-Type", ""):
         (OUT / "404.html").write_bytes(r.content)
         saved["404"] = OUT / "404.html"
+        # Recursos que solo usa la 404 (CSS de Divi para "notfound", fitvids...)
+        soup = BeautifulSoup(r.text, "html.parser")
+        for tag in soup.find_all(["link", "script", "img"]):
+            enqueue(norm(tag.get("href") or tag.get("src")))
+        scan_text_for_abs(r.text)
+        while assets_q:
+            handle_asset(assets_q.popleft())
 
     for url, p in saved.items():
         if p.suffix in (".html", ".htm", ".css", ".js", ".json", ".xml", ".svg", ".txt"):
